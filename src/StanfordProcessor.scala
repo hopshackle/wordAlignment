@@ -79,8 +79,10 @@ class StanfordProcessor {
 
 object RunStanfordParser extends App {
   val processor = new StanfordProcessor
-
-  for (sentence <- Source.stdin.getLines()) {
+  println("Starting")
+  for (sentence <- List("A staff of 30 specialists will conduct research and training on cyber warfare.",
+      "The police want to arrest Michael Karras in Singapore.")) {
+    println("Starting")
     println(processor.parseToConll(sentence).replaceAllLiterally("\n\n","\n") + "\n")
   }
 }

@@ -4,6 +4,7 @@ import scala.util.matching.Regex
 import scala.collection.mutable.{Map, Set, ArrayBuffer}
 import java.util.Date
 import java.text.SimpleDateFormat
+import java.io._
 
 /****************************** Driver Program *****************************/
 object Aligner {
@@ -17,8 +18,10 @@ object Aligner {
             case Nil => map
             //case "--train" :: tail =>
             //          parseOptions(map ++ Map('train -> true), tail)
-            //case "-a" :: value :: tail =>
-            //          parseOptions(map ++ Map('amrfile -> value), tail)
+            case "-i" :: value :: tail =>
+              parseOptions(map ++ Map('amrfile -> value), tail)
+            case "-o" :: value :: tail =>
+              parseOptions(map ++ Map('outputfile -> value), tail)
             //case "--only" :: tail =>
             //          parseOptions(map ++ Map('only -> true), tail)
             case "-h" :: value :: tail =>
@@ -35,7 +38,7 @@ object Aligner {
       }
     }
 
-    def main(args: Array[String]) {
+    def main(args: Array[String]): Unit = {
         val options = parseOptions(Map(),args.toList)
         if (options.contains('help)) { println(usage); sys.exit(1) }
 
@@ -49,17 +52,21 @@ object Aligner {
         }
 
         val sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
-        for (block <- Corpus.splitOnNewline(Source.stdin.getLines)) {
+        val input = Source.fromFile(options('amrfile).toString).getLines()
+        val output = new FileWriter(options('outputfile).toString)
+        for (block <- Corpus.splitOnNewline(input)) {
             if (block.split("\n").exists(_.startsWith("("))) {  // Does it contain some AMR?
                 logger(2,"**** Processsing Block *****")
                 logger(2,block)
                 logger(2,"****************************")
                 val extrastr : String = block.split("\n").filter(_.matches("^# ::.*")).mkString("\n")
                 val amrstr : String = block.split("\n").filterNot(_.matches("^#.*")).mkString("\n")
-                println(extrastr)
+                
+                write(extrastr, output)
+              
                 val amr = Graph.parse(amrstr)
                 val extras = AMRTrainingData.getUlfString(extrastr)
-                val tokenized = extras("::tok").split(" ")
+                val tokenized = extras("::snt").split(" ")
                 val wordAlignments = AlignWords.alignWords(tokenized, amr)
                 val spanAlignments = if (aligner2) {
                         AlignSpans3.align(tokenized, amr)
@@ -69,22 +76,27 @@ object Aligner {
                 AlignSpans.logUnalignedConcepts(amr.root)
 
                 val spans = amr.spans
-                for ((span, i) <- spans.zipWithIndex) {
+                for ((span, i) <- spans zipWithIndex) {
                     logger(1, "Span "+(i+1).toString+":  "+span.words+" => "+span.amr)
                     logger(3, "* "+span.format)
                 }
-                println("# ::alignments "+spans.map(_.format).mkString(" ")+" ::annotator Aligner v.02 ::date "+sdf.format(new Date))
-                println(amr.printNodes.map(x => "# ::node\t" + x).mkString("\n"))
-                println(amr.printRoot)
+                write("# ::alignments "+spans.map(_.format).mkString(" ")+" ::annotator Aligner v.02 ::date "+sdf.format(new Date), output)
+                write(amr.printNodes.map(x => "# ::node\t" + x).mkString("\n"), output)
+                write(amr.printRoot, output)
                 if (amr.root.relations.size > 0) {
-                    println(amr.printEdges.map(x => "# ::edge\t" + x).mkString("\n"))
+                    write(amr.printEdges.map(x => "# ::edge\t" + x).mkString("\n"), output)
                 }
-                println(amrstr+"\n")
+                write(amrstr+"\n", output)
             } else {
-                println(block+"\n")
+                write(block+"\n", output)
             }
         }
+        if (output != null) output.close()
     }
 
+    def write(output: String, outputFile: FileWriter): Unit = {
+      println(output)
+      if (outputFile != null) outputFile.write(output + "\n")
+    }
 }
 

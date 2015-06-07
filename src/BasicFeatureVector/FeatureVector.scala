@@ -1,6 +1,5 @@
 package edu.cmu.lti.nlp.amr.BasicFeatureVector
 import edu.cmu.lti.nlp.amr.Train.AbstractFeatureVector
-
 import java.io.File
 import java.io.FileOutputStream
 import java.io.PrintStream

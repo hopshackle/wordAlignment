@@ -1,5 +1,6 @@
 package edu.cmu.lti.nlp.amr.GraphDecoder
 import edu.cmu.lti.nlp.amr._
+
 import edu.cmu.lti.nlp.amr.FastFeatureVector._
 
 import java.io.File
