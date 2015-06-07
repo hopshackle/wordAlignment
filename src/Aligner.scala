@@ -92,7 +92,7 @@ object Aligner {
         if (amr.root.relations.size > 0) {
           write(amr.printEdges.map(x => "# ::edge\t" + x).mkString("\n"), output)
         }
-        write(amrstr + "\n", output)
+//        write(amrstr + "\n", output)
       } else {
 //        write(block + "\n", output)
       }
