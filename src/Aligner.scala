@@ -1,11 +1,11 @@
 package edu.cmu.lti.nlp.amr
 
 import scala.util.matching.Regex
-import scala.collection.mutable.{ Map, Set, ArrayBuffer }
+import scala.collection.mutable.{Set, ArrayBuffer }
 import java.util.Date
 import java.text.SimpleDateFormat
 import java.io._
-import megaparse.amr.SpanGraph
+import scala.collection.immutable.Map
 
 /****************************** Driver Program *****************************/
 object Aligner {
@@ -106,7 +106,17 @@ object Aligner {
     if (outputFile != null) outputFile.write(output + "\n")
   }
 
-  import megaparse.amr.SpanGraph
+
+case class SpanGraph(nodes: Map[String, String], nodeSpans: Map[String, (Int, Int)], arcs: List[(String, String, String)]) {
+  
+  def toOutputFormat: String = {
+    val nodeOutput = nodes.keys.toList map (x => s"# ::node\t${x}\t${nodes(x)}\t${nodeSpans(x)._1}\t${nodeSpans(x)._2}\n")
+    val arcOutput = arcs map (x => s"# ::edge\t${x._1}\t${x._2}\t${x._3}\n")
+
+    "# ::SpanGraph\n" + nodeOutput.mkString + arcOutput.mkString
+  }
+}
+
   def toSpanGraph(parseTree: List[ConllToken]): SpanGraph = {
     
     val nodes = (for {
