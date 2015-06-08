@@ -68,7 +68,7 @@ object Aligner {
         val amr = Graph.parse(amrstr)
         val extras = AMRTrainingData.getUlfString(extrastr)
         // output the English sentence
-        write("# ::snt " + extras("::snt"), output)
+        write("# ::snt " + extras("::snt") +"\n", output)
         val tokenized = extras("::snt").split(" ")
         val wordAlignments = AlignWords.alignWords(tokenized, amr)
         val parseTree = toSpanGraph(processor.parse(extras("::snt")).head)
@@ -86,7 +86,7 @@ object Aligner {
           logger(3, "* " + span.format)
         }
         //               write("# ::alignments "+spans.map(_.format).mkString(" ")+" ::annotator Aligner v.02 ::date "+sdf.format(new Date), output)
-        write("# ::AMRGraph\n", output)
+        write("# ::AMRGraph", output)
         write(amr.printNodes.map(x => "# ::node\t" + x).mkString("\n"), output)
         write(amr.printRoot, output)
         if (amr.root.relations.size > 0) {
@@ -96,6 +96,7 @@ object Aligner {
       } else {
 //        write(block + "\n", output)
       }
+      write("", output)
     }
     if (output != null) output.close()
   }
@@ -104,34 +105,24 @@ object Aligner {
     println(output)
     if (outputFile != null) outputFile.write(output + "\n")
   }
-/*  
-  case class ConllToken(index: Option[Int],
-                      form: Option[String],
-                      lemma: Option[String],
-                      pos: Option[String],
-                      cpos: Option[String],
-                      feats: Option[String],
-                      gov: Option[Int],
-                      deprel: Option[String],
-                      phead: Option[Int],
-                      pdeprel: Option[String]) extends Iterable[Option[_]] {
-                      * 
-                      
-                      */
+
   import megaparse.amr.SpanGraph
   def toSpanGraph(parseTree: List[ConllToken]): SpanGraph = {
     
     val nodes = (for {
-      ConllToken(Some(index), Some(form), lemma, pos, cpos, feats, Some(parentIndex), deprel, phead, pdeprel) <- parseTree
+      ConllToken(Some(index), Some(form), lemma, pos, cpos, feats, Some(parentIndex), Some(deprel), phead, pdeprel) <- parseTree
+      if deprel != "punct"
     } yield (index.toString -> form)).toMap + ("0" -> "ROOT")
     
     val arcs = for {
       ConllToken(Some(index), Some(form), lemma, pos, cpos, feats, Some(parentIndex), deprel, phead, pdeprel) <- parseTree
+      if deprel.getOrElse("") != "punct"
     } yield (parentIndex.toString, index.toString, deprel.getOrElse("UNK"))
-    
+   
     val nodeSpans = (for {
-      ConllToken(Some(index), Some(form), lemma, pos, cpos, feats, Some(parentIndex), deprel, phead, pdeprel) <- parseTree
-    } yield (index.toString -> (index-1, index))).toMap + ("0" -> (0, 0))
+      (ConllToken(Some(index), Some(form), lemma, pos, cpos, feats, Some(parentIndex), deprel, phead, pdeprel), wordCount) <- 
+        (parseTree filter (x => x.deprel.getOrElse("") != "punct") zipWithIndex)
+    } yield (index.toString -> (wordCount+1, wordCount+2))).toMap + ("0" -> (0, 1))
     
     SpanGraph(nodes, nodeSpans, arcs)
   }
