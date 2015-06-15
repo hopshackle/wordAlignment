@@ -8,17 +8,16 @@ import scala.collection.JavaConversions._
 import edu.stanford.nlp.ling.CoreAnnotations._
 import edu.stanford.nlp.trees.TreeCoreAnnotations.TreeAnnotation
 
-
 case class ConllToken(index: Option[Int],
-                      form: Option[String],
-                      lemma: Option[String],
-                      pos: Option[String],
-                      cpos: Option[String],
-                      feats: Option[String],
-                      gov: Option[Int],
-                      deprel: Option[String],
-                      phead: Option[Int],
-                      pdeprel: Option[String]) extends Iterable[Option[_]] {
+  form: Option[String],
+  lemma: Option[String],
+  pos: Option[String],
+  cpos: Option[String],
+  feats: Option[String],
+  gov: Option[Int],
+  deprel: Option[String],
+  phead: Option[Int],
+  pdeprel: Option[String]) extends Iterable[Option[_]] {
 
   override def toString() = {
     map(_.getOrElse("_")).mkString("\t")
@@ -35,7 +34,7 @@ case class ConllToken(index: Option[Int],
 class StanfordProcessor {
   private val processor = {
     val props = new Properties()
-    props.setProperty("annotators", "tokenize,ssplit,parse")
+    props.setProperty("annotators", "tokenize,ssplit,parse,lemma,ner")
     new StanfordCoreNLP(props)
   }
 
@@ -58,18 +57,19 @@ class StanfordProcessor {
         val start = token.get(classOf[CharacterOffsetBeginAnnotation])
         val end = token.get(classOf[CharacterOffsetEndAnnotation])
         val pos = token.get(classOf[PartOfSpeechAnnotation])
+        val ner = token.get(classOf[NamedEntityTagAnnotation])
+        val lemma = token.get(classOf[LemmaAnnotation])
         ConllToken(
           Some(dep.dep.index),
           Some(input.substring(start, end)),
           None,
           Some(pos),
           Some(pos),
-          None,
+          Some(lemma),
           Some(dep.gov.index),
           Some(dep.reln.getShortName),
           None,
-          None
-        )
+          Some(ner))
       }
     }
   }
@@ -80,9 +80,11 @@ class StanfordProcessor {
 object RunStanfordParser extends App {
   val processor = new StanfordProcessor
   println("Starting")
-  for (sentence <- List("A staff of 30 specialists will conduct research and training on cyber warfare.",
-      "The police want to arrest Michael Karras in Singapore.")) {
+  for (
+    sentence <- List("A staff of 30 specialists will conduct research and training on cyber warfare.",
+      "The police want to arrest Michael Karras in Singapore.")
+  ) {
     println("Starting")
-    println(processor.parseToConll(sentence).replaceAllLiterally("\n\n","\n") + "\n")
+    println(processor.parseToConll(sentence).replaceAllLiterally("\n\n", "\n") + "\n")
   }
 }
