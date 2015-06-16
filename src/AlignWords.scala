@@ -39,7 +39,7 @@ object AlignWords {
             for (word <- stemmedSentence(i)) {
                 if (word == concept && alignments(i) == None) {
                     if (found) {
-                        logger(1, "WARNING: Found duplicate match for concept "+node.concept)
+                        logger(3, "WARNING: Found duplicate match for concept "+node.concept)
                     } else {
                         logger(3,"concept: "+node.concept+" word: "+word)
                         alignments(i) = Some(node) // point to the current node
