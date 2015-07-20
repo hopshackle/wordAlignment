@@ -35,6 +35,8 @@ object AlignWords {
             concept = node.concept
         }
         var found = false
+        var possibleMatches = scala.collection.mutable.Map[Int, List[String]]()
+        // Key is 
         for (i <- Range(0, stemmedSentence.size)) {
             for (word <- stemmedSentence(i)) {
                 if (word == concept && alignments(i) == None) {
