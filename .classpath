@@ -20,6 +20,5 @@
 	<classpathentry kind="lib" path="C:/Users/James/.ivy2/cache/javax.xml.bind/jaxb-api/jars/jaxb-api-2.2.7.jar"/>
 	<classpathentry kind="lib" path="C:/Users/James/.ivy2/cache/com.googlecode.efficient-java-matrix-library/ejml/jars/ejml-0.23.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/megaparse"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
