@@ -119,7 +119,7 @@ case class SpanGraph(nodes: Map[String, String], nodeSpans: Map[String, (Int, In
     val nodes = (for {
       ConllToken(Some(index), Some(form), lemma, pos, cpos, feats, Some(parentIndex), Some(deprel), phead, pdeprel) <- parseTree
       if deprel != "punct"
-    } yield (index.toString -> form)).toMap + ("0" -> "ROOT")
+    } yield (index.toString -> form)).toMap
     
     val arcs = for {
       ConllToken(Some(index), Some(form), lemma, pos, cpos, feats, Some(parentIndex), deprel, phead, pdeprel) <- parseTree
