@@ -45,10 +45,10 @@ class StanfordProcessor {
    * Parse to basic dependencies in conllx format.
    * Undoes any changes Stanford makes to the word forms.
    */
-  def parse(input: String): List[List[ConllToken]] = {
+  def parse(input: String): List[ConllToken] = {
     val annotation = processor.process(input)
     val sentences = annotation.get(classOf[SentencesAnnotation]).toList
-    for (sentence <- sentences) yield {
+    val allSentences = for (sentence <- sentences) yield {
       val tree = sentence.get(classOf[TreeAnnotation])
       val gs = grammaticalStructureFactory.newGrammaticalStructure(tree)
       val deps = gs.typedDependencies().toList sortBy (_.dep.index)
@@ -72,19 +72,19 @@ class StanfordProcessor {
           Some(ner))
       }
     }
+    val t = allSentences.zipWithIndex //map 
+    val t2 = t map {
+      case (listCONLL, index) =>
+        listCONLL map { x =>
+          x.copy(index = Some(x.index.get + (index * 100)), gov = x.gov match {
+            case None => None
+            case Some(parentIndex) if parentIndex != 0 => Some(parentIndex + index * 100)
+            case _ => Some(0)
+          })
+        }
+    }
+    t2.flatten
   }
 
   def parseToConll(input: String) = parse(input).map(_.mkString("\n")).mkString("\n\n")
-}
-
-object RunStanfordParser extends App {
-  val processor = new StanfordProcessor
-  println("Starting")
-  for (
-    sentence <- List("A staff of 30 specialists will conduct research and training on cyber warfare.",
-      "The police want to arrest Michael Karras in Singapore.")
-  ) {
-    println("Starting")
-    println(processor.parseToConll(sentence).replaceAllLiterally("\n\n", "\n") + "\n")
-  }
 }

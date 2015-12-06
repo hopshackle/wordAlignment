@@ -545,7 +545,7 @@ object Graph {
         def node : Parser[Node] = terminalNode | internalNode | unnamedInternalNode
     }
 
-    private val parser = new GraphParser()
+    private val parser = new GraphParser
 
     def load(iterator: Iterator[String]) : Iterator[Graph] = {
         for (line <- iterator) yield {

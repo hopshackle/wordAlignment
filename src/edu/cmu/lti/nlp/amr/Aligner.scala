@@ -68,7 +68,7 @@ object Aligner {
         write("# ::snt " + extras("::snt") +"\n", output)
         val tokenized = extras("::snt").split(" ")
         val wordAlignments = AlignWords.alignWords(tokenized, amr)
-        val parseTree = toSpanGraph(processor.parse(extras("::snt")).head)
+        val parseTree = toSpanGraph(processor.parse(extras("::snt")))
         write(parseTree.toOutputFormat, output)
         val spanAlignments = if (aligner2) {
           AlignSpans3.align(tokenized, amr)
