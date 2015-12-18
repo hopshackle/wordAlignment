@@ -72,18 +72,32 @@ class StanfordProcessor {
           Some(ner))
       }
     }
-    val t = allSentences.zipWithIndex //map 
+    val t = allSentences.zipWithIndex
+    val maxIndex = (allSentences.flatten maxBy { x => x.index.getOrElse(0) }).index.get
+    val multiSentence = t.size > 1
     val t2 = t map {
       case (listCONLL, index) =>
         listCONLL map { x =>
-          x.copy(index = Some(x.index.get + (index * 100)), gov = x.gov match {
-            case None => None
-            case Some(parentIndex) if parentIndex != 0 => Some(parentIndex + index * 100)
-            case _ => Some(0)
-          })
+          x.copy(
+            index = Some(x.index.get + (index * 100)),
+            gov = x.gov match {
+              case None if !multiSentence => None
+              case None if multiSentence => Some(maxIndex + 1)
+              case Some(parentIndex) if parentIndex != 0 => Some(parentIndex + index * 100)
+              case _ if !multiSentence => Some(0)
+              case _ if multiSentence => Some(maxIndex + 1)
+            },
+            deprel = x.deprel match {
+              case None => None
+              case Some(label) => Option(if (multiSentence && label == "root") "sntN" else label)
+            })
         }
     }
-    t2.flatten
+
+    val multiSentenceTokens = if (multiSentence) {
+      List(ConllToken(Some(maxIndex + 1), Some("multi-sentence"), None, Some(""), Some(""), Some("multi-sentence"), Some(0), Some(""), None, Some("")))
+    } else List.empty[ConllToken]
+    t2.flatten ++ multiSentenceTokens
   }
 
   def parseToConll(input: String) = parse(input).map(_.mkString("\n")).mkString("\n\n")
