@@ -324,7 +324,9 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
         var oldIdToNewId : immutable.Map[String, String] = immutable.Map(node.id -> newId)
         node.id = newId
         getNodeById += (node.id -> node)
-        for (((label,child), i) <- node.topologicalOrdering.zipWithIndex) {
+        val relationIndex = node.relations.zipWithIndex
+        val topologicalOrderingWithRelationalIndex = relationIndex filter (x => node.topologicalOrdering.contains(x._1))
+        for (((label,child), i) <- topologicalOrderingWithRelationalIndex) {
             oldIdToNewId ++= makeIds(child, id ::: List(i))
         }
         return oldIdToNewId
